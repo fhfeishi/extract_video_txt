@@ -1,0 +1,35 @@
+[project]
+name = "extract-video-txt"
+version = "0.1.0"
+description = "Extract notes-friendly text from video and audio files."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2,<3",
+]
+
+[project.optional-dependencies]
+dashscope = [
+    "dashscope>=1.25",
+]
+local = [
+    "funasr",
+    "modelscope",
+    "torch",
+    "torchaudio",
+]
+dev = [
+    "pytest>=8",
+    "pyyaml>=6",
+]
+
+[project.scripts]
+video-text-tool = "video_text_tool.cli:main"
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["video_text_tool*"]
+exclude = ["skills*"]

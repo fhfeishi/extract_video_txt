@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Text Extraction"
+  short_description: "Build subtitle-first video transcript tools"
+  default_prompt: "Use $video-text-extraction to design or improve this video transcript extraction workflow."
