@@ -6,7 +6,8 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .asr import transcribe_with_backend, translate_segments_dashscope
+from .asr import choose_backend, transcribe_with_backend, translate_segments_dashscope
+from .cache import asr_cache_key, asr_cache_path, asr_model_name, load_asr_cache, save_asr_cache
 from .errors import ToolError
 from .media import check_binary, extract_audio, render_stream_report, try_load_subtitle
 from .models import Backend, Device, LocalAsrConfig, OutputConfig, RunConfig
@@ -63,10 +64,19 @@ def run(args: argparse.Namespace) -> None:
                 ],
             )
 
-    with tempfile.TemporaryDirectory(prefix="video_text_tool_") as temp_dir:
-        audio_path = Path(temp_dir) / f"{stem}.16k.wav"
-        extract_audio(config.input_path, audio_path)
-        segments, asr_backend = transcribe_with_backend(audio_path, config)
+    asr_backend = choose_backend(config)
+    cache_path = asr_cache_path(out_dir, stem, asr_cache_key(config, asr_backend)) if config.use_cache else None
+
+    segments = None
+    if cache_path and not config.force:
+        segments = load_asr_cache(cache_path)
+    if segments is None:
+        with tempfile.TemporaryDirectory(prefix="video_text_tool_") as temp_dir:
+            audio_path = Path(temp_dir) / f"{stem}.16k.wav"
+            extract_audio(config.input_path, audio_path, max_seconds=config.max_seconds)
+            segments, asr_backend = transcribe_with_backend(audio_path, config, backend=asr_backend)
+        if cache_path:
+            save_asr_cache(cache_path, segments, backend=asr_backend, model=asr_model_name(config, asr_backend))
 
     if config.translate_to:
         segments = translate_segments_dashscope(segments, config.translate_to, config.dashscope)
@@ -139,6 +149,15 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         default=90,
         help="Split long transcript segments for readable txt/srt output. Set 0 to disable.",
     )
+    parser.add_argument(
+        "--max-seconds",
+        type=float,
+        default=None,
+        metavar="SEC",
+        help="Only transcribe the first N seconds of audio (smoke tests, cost control).",
+    )
+    parser.add_argument("--no-cache", action="store_true", help="Disable the ASR result cache.")
+    parser.add_argument("--force", action="store_true", help="Ignore cached ASR results and transcribe again.")
     parser.add_argument("--list-streams", action="store_true", help="Print ffprobe stream summary and exit.")
     return parser.parse_args(argv)
 
@@ -155,6 +174,9 @@ def build_config(args: argparse.Namespace) -> RunConfig:
         },
         translate_to=args.translate_to,
         list_streams=args.list_streams,
+        max_seconds=args.max_seconds,
+        use_cache=not args.no_cache,
+        force=args.force,
         local={
             "asr_model": args.asr_model,
             "vad_model": args.vad_model,

@@ -170,8 +170,9 @@ ASR 是强兜底，但不是最优先方案。更聪明的提取策略应该先�
 - 支持同名外挂字幕扫描：`.srt/.ass/.vtt`，包含 `video.zh.srt`、`video.en.srt` 等命名。
 - 支持 `--subtitle-file`、`--subtitle-lang`、`--subtitle-stream`。
 - JSON 输出包含 `source` 字段，用于追溯文本来源。
+- ASR 结果默认缓存在 `<output-dir>/.cache/`，支持 `--no-cache`/`--force`；`--max-seconds` 可只转写前 N 秒。
 - 错误提示包含标题、细节和下一步建议。
-- `media/text/output` 已有最小 pytest 覆盖。
+- `media/text/output/cache` 已有最小 pytest 覆盖。
 
 ## Agent 友好的文档架构
 
@@ -219,8 +220,6 @@ agent 接手必须遵守        -> AGENTS
 
 `strata` 这个名字适合表达“层理/地层”的感觉：一个项目不是一次性脚本，而是由意图、工具、实验、知识和 reusable workflow 一层层沉淀出来的 solution。
 
-`strata_example.md` 是可复制到新项目的中文示例模板；当前项目自己的 `strata.md` 应该保持为本项目已经填写好的 launch charter。这样可以避免“模板”和“项目事实”混在一个文件里。
-
 ## Strata 与 Skill 的关系
 
 `strata.md` 可以连接 skill，但不应该承载 skill 的完整内容，也不应该负责生成 skill。
@@ -262,37 +261,11 @@ strata 连接 skill，而不是替代 skill。
 
 Skill 的成熟不是一次写出来的，而是通过真实任务迭代出来的。好的路径是先用一个轻量 skill 指挥 2-3 个真实项目或功能，再观察 agent 是否仍然反复犯同类错误；如果会，就把触发描述、控制点、检查清单或脚本补进 skill。
 
-## PDF RAG chunk 实验原则
+## ASR 缓存与烟测
 
-PDF RAG 和视频文案提取共享同一个底层判断：不要一上来把材料压平成普通文本。先尽量保留来源结构，再做切分、索引和知识库输出。
+云端 ASR 是整条流水线里最贵、最慢的一步，应该默认缓存：
 
-对论文、报告、技术手册这类 PDF，caption 是高价值结构。figure/table caption 经常浓缩了实验对象、变量、结论和图表编号，如果被普通递归切分吞进正文或切断，检索时容易出现两类问题：
-
-- 查图表问题时召回不到 caption。
-- 召回到 caption 但缺少正文解释上下文。
-
-当前 `rag_pdfs` 先固定两条主策略：
-
-```text
-inline_captions_chunks
-  = caption 按页面阅读顺序内联进正文 chunk
-  = 适合需要 caption + 正文解释一起召回的问答
-
-separate_caption_chunks
-  = 正文 chunk 排除 caption，caption 单独成 chunk，并携带前后邻近正文
-  = 适合图表标题本身就是高信号检索入口的问答
-```
-
-对照策略必须保留，否则很难判断 caption-aware 是否真的更好：
-
-- `page_chunks`：检查整页粗粒度是否已经足够。
-- `section_chunks`：检查标题层级是否比 caption 处理更重要。
-- `recursive_text_chunks`：作为最常见的纯文本 baseline。
-
-实验记录至少关注：
-
-- chunk 数量和平均长度。
-- caption coverage。
-- caption 独立 chunk 数量。
-- 检索 top-k 中是否含有可回答问题的上下文。
-- 是否需要真实 embedding 复测 lexical smoke test 的结论。
+- 缓存键必须包含文件内容哈希、后端、模型和截取参数，任何一项变化都应触发重新转写。
+- 缓存放在 `<output-dir>/.cache/`，跟随输出目录走，删除输出目录即清空缓存。
+- 提供 `--force`（重跑但仍写缓存）和 `--no-cache`（完全旁路）两个独立开关。
+- 验证新改动时先用 `--max-seconds 10` 跑短样例，确认链路可用再处理整个文件。

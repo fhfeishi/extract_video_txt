@@ -145,6 +145,9 @@ class RunConfig(BaseModel):
     subtitle: SubtitleConfig = Field(default_factory=SubtitleConfig)
     translate_to: str | None = None
     list_streams: bool = False
+    max_seconds: float | None = Field(default=None, gt=0)
+    use_cache: bool = True
+    force: bool = False
     local: LocalAsrConfig = Field(default_factory=LocalAsrConfig)
     dashscope: DashScopeConfig = Field(default_factory=DashScopeConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)

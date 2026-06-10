@@ -53,7 +53,7 @@ export VIDEO_TEXT_TOOL_MODEL_ROOT=/mnt/e/local_models
 检查媒体流：
 
 ```bash
-uv run video-text-tool videoplaybask.mp4 --list-streams
+uv run video-text-tool res/videoplaybask.mp4 --list-streams
 ```
 
 自动模式：优先字幕，无字幕时走 ASR：
@@ -86,6 +86,21 @@ uv run video-text-tool video.mkv --subtitle-stream 2
 
 ```bash
 uv run video-text-tool video.mp4 --max-segment-chars 70
+```
+
+只转写前 N 秒，用于烟测或控制云端成本：
+
+```bash
+uv run video-text-tool video.mp4 --backend dashscope --max-seconds 10
+```
+
+## Cache
+
+ASR 结果默认缓存在 `<output-dir>/.cache/`，按文件内容哈希、后端、模型和截取参数键控。同一文件重复运行不会重复调用 ASR：
+
+```bash
+uv run video-text-tool video.mp4 --force      # 忽略缓存，强制重新转写
+uv run video-text-tool video.mp4 --no-cache   # 本次运行完全禁用缓存
 ```
 
 ## Outputs
@@ -138,39 +153,22 @@ video.vtt
 uv run python -m compileall video_text_tool tests
 uv run pytest -q
 uv run video-text-tool --help
-uv run video-text-tool videoplaybask.mp4 --list-streams
+uv run video-text-tool res/videoplaybask.mp4 --list-streams
 ```
 
 DashScope 10 秒烟测：
 
 ```bash
 source ~/.zshrc
-mkdir -p outputs/smoke_dashscope_10s
-ffmpeg -y -v error -ss 0 -t 10 -i audioplayback.mp3 -ac 1 -ar 16000 outputs/smoke_dashscope_10s/sample_10s.wav
-uv run video-text-tool outputs/smoke_dashscope_10s/sample_10s.wav --backend dashscope --subtitle ignore --output-dir outputs/smoke_dashscope_10s --formats txt,json --max-segment-chars 60
+uv run video-text-tool res/audioplayback.mp3 --backend dashscope --subtitle ignore --max-seconds 10 --output-dir outputs/smoke_dashscope_10s --formats txt,json --max-segment-chars 60
 ```
 
 已验证 DashScope ASR 和 `--translate-to zh` 调用链路可运行。短样例仍有 `Claude -> cloud` 这类术语误识别，后续需要术语词典或 LLM 纠错。
 
-## PDF RAG Experiments
-
-`rag_pdfs/` 是独立的 PDF RAG 切分实验子目录，重点比较 caption-aware chunks：
-
-```bash
-uv sync --extra pdf-rag --extra dev
-uv run pdf-rag-experiment paper.pdf --query "What does Figure 2 show?"
-```
-
-核心策略：
-
-- `inline_captions_chunks`：caption 内联进正文 chunk。
-- `separate_caption_chunks`：caption 独立成 chunk，并带邻近上下文。
-
-实验结果默认写入 `outputs/rag_pdfs/`，包含对比报告和各策略 JSONL chunks。
 
 ## Boundaries
 
 - 支持文字字幕：外挂 `.srt/.ass/.vtt`，内嵌 `srt/ass/mov_text/webvtt`。
 - 图片字幕和烧录在画面里的硬字幕需要 OCR，当前未实现。
-- 平台字幕下载、批处理、缓存、Markdown 知识库输出仍在路线图中。
+- 平台字幕下载、批处理、Markdown 知识库输出仍在路线图中。
 - faster-whisper、WhisperX、Whishper 是参考方案，当前没有集成进代码。

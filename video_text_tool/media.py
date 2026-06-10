@@ -275,25 +275,28 @@ def convert_subtitle_file(path: Path, output_srt: Path) -> list[Segment]:
     return parse_srt(output_srt.read_text(encoding="utf-8", errors="replace"))
 
 
-def extract_audio(input_path: Path, output_wav: Path) -> None:
-    run_command(
-        [
-            "ffmpeg",
-            "-y",
-            "-v",
-            "error",
-            "-i",
-            str(input_path),
-            "-vn",
-            "-ac",
-            "1",
-            "-ar",
-            "16000",
-            "-f",
-            "wav",
-            str(output_wav),
-        ]
-    )
+def extract_audio(input_path: Path, output_wav: Path, *, max_seconds: float | None = None) -> None:
+    command = [
+        "ffmpeg",
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        str(input_path),
+    ]
+    if max_seconds:
+        command += ["-t", f"{max_seconds:g}"]
+    command += [
+        "-vn",
+        "-ac",
+        "1",
+        "-ar",
+        "16000",
+        "-f",
+        "wav",
+        str(output_wav),
+    ]
+    run_command(command)
 
 
 def parse_srt(content: str) -> list[Segment]:

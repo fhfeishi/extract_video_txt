@@ -39,8 +39,10 @@ def transcribe(audio_path: Path, config: RunConfig) -> list[Segment]:
     return segments
 
 
-def transcribe_with_backend(audio_path: Path, config: RunConfig) -> tuple[list[Segment], Backend]:
-    backend = choose_backend(config)
+def transcribe_with_backend(
+    audio_path: Path, config: RunConfig, backend: Backend | None = None
+) -> tuple[list[Segment], Backend]:
+    backend = backend or choose_backend(config)
     if backend == Backend.FUNASR:
         return transcribe_funasr(audio_path, config.local), backend
     if backend == Backend.DASHSCOPE:

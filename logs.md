@@ -576,58 +576,39 @@ video-text-extraction   = 字幕/ASR/OCR/术语/输出的视频文案方法
 skills/video-text-extraction = 当前唯一 skill
 ```
 
-### PDF RAG caption-aware chunk 实验脚手架
+### 2026-06-10 仓库梳理：聚焦音视频转文本
 
-用户新建 PDF RAG pipeline 方向，希望参考 `strata.md`，并结合之前 LangChain PDF RAG 管线，围绕 `inline_captions_chunks` 和 `separate_caption_chunks` 展开实验，同时探索其他 chunk 对照方式。
+项目定位收敛为单一职责的音视频转文本工具，做一次工业级清理。
 
-调整：
+删除：
 
-- 新增 `rag_pdfs/` 子项目。
-- 新增核心数据结构：
-  - `PdfElement`：保留 page/order/kind/source/metadata。
-  - `PdfChunk`：保留 strategy/page_start/page_end/kind/metadata。
-- 新增 PDF 文本元素提取：
-  - `load_pdf_elements()` 使用可选 `pypdf`。
-  - `elements_from_text_pages()` 支持无 PDF 依赖的测试和实验样例。
-  - 基础识别 `caption`、`heading`、`body`。
-- 新增主策略：
-  - `inline_captions_chunks`：caption 内联进入正文流。
-  - `separate_caption_chunks`：caption 独立成 chunk，并携带前后正文 context。
-- 新增对照策略：
-  - `page_chunks`
-  - `section_chunks`
-  - `recursive_text_chunks`
-- 新增轻量实验比较：
-  - chunk 数量、平均长度、caption chunk 数、caption coverage。
-  - lexical retrieval smoke test，用于快速比较 query 的 top-k 召回。
-- 新增 LangChain 适配：
-  - `to_langchain_documents()`
-  - `build_faiss_retriever()`
-- 新增 CLI：
+- `rag_pdfs/` 子项目、`tests/test_rag_pdfs.py`、`pyproject.toml` 中的 `pdf-rag` extra 和 `pdf-rag-experiment` 入口，以及 `plan.md`/`notes.md` 中的 PDF RAG 章节。PDF RAG 实验与本工具职责无关，整体移除。
+- `video_transcript/` 原型目录。它依赖仓库中不存在的 `configs.config` 和未声明的 `loguru`，无法独立运行；吸收其有价值的设计后删除。
+- `git_logs.md`（git push 排障记录）和 `strata_example.md`（跨项目模板），与本项目无关。
+- dev 依赖中未被使用的 `pyyaml`。
 
-```bash
-uv run pdf-rag-experiment paper.pdf --query "What does Figure 2 show?"
-```
+从 `video_transcript` 吸收进 `video_text_tool` 的设计：
+
+- ASR 结果缓存：新增 `video_text_tool/cache.py`，按文件内容哈希、后端、模型、截取参数键控，缓存写入 `<output-dir>/.cache/`；新增 `--no-cache` 和 `--force`。
+- `--max-seconds`：抽音频时用 ffmpeg `-t` 截取前 N 秒，用于烟测和控制云端成本。
 
 验证：
 
 ```bash
-source ~/.zshrc
 uv lock
-uv run python -m compileall video_text_tool rag_pdfs tests
+uv run python -m compileall video_text_tool tests
 uv run pytest -q
 uv run video-text-tool --help
-uv run pdf-rag-experiment --help
 uv run video-text-tool res/videoplaybask.mp4 --list-streams
 ```
 
 结果：
 
 ```text
-uv lock resolved 144 packages
+uv lock 移除 faiss/langchain/pypdf/pyyaml 等 RAG 依赖
 compileall passed
-pytest: 12 passed
+pytest: 11 passed（含 3 个新的 cache 测试）
 video-text-tool --help passed
-pdf-rag-experiment --help passed
 res/videoplaybask.mp4: video/audio streams only, no subtitle stream
+预置缓存后空 DASHSCOPE_API_KEY 运行 ASR 路径，命中缓存直接产出 txt/srt/json
 ```

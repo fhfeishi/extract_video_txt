@@ -12,12 +12,6 @@ dependencies = [
 dashscope = [
     "dashscope>=1.25",
 ]
-pdf-rag = [
-    "faiss-cpu>=1.8",
-    "langchain-community>=0.3",
-    "langchain-core>=0.3",
-    "pypdf>=5",
-]
 local = [
     "funasr",
     "modelscope",
@@ -26,17 +20,15 @@ local = [
 ]
 dev = [
     "pytest>=8",
-    "pyyaml>=6",
 ]
 
 [project.scripts]
 video-text-tool = "video_text_tool.cli:main"
-pdf-rag-experiment = "rag_pdfs.cli:main"
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["video_text_tool*", "rag_pdfs*"]
+include = ["video_text_tool*"]
 exclude = ["skills*"]

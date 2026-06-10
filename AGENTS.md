@@ -19,7 +19,7 @@ Environment facts:
 - `ffmpeg` and `ffprobe` are required.
 - DashScope uses `DASHSCOPE_API_KEY`; source `~/.zshrc` when needed.
 - Local model root defaults to `/mnt/e/local_models`; override with `VIDEO_TEXT_TOOL_MODEL_ROOT`.
-- Sample files: `videoplaybask.mp4`, `audioplayback.mp3`.
+- Sample files: `res/videoplaybask.mp4`, `res/audioplayback.mp3`.
 
 Never print API keys. Report only whether a key is set.
 
@@ -41,6 +41,8 @@ Implemented:
 - `--subtitle-file`, `--subtitle-lang`, `--subtitle-stream`.
 - DashScope ASR validated.
 - DashScope `--translate-to zh` path validated.
+- ASR result cache in `<output-dir>/.cache/`, keyed by file hash/backend/model/clip; `--no-cache` and `--force` override it.
+- `--max-seconds` clips audio before ASR for smoke tests and cost control.
 - FunASR path present but not fully validated in WSL.
 
 Planned:
@@ -48,7 +50,7 @@ Planned:
 - Terms dictionary.
 - Hard subtitle OCR.
 - Platform subtitle download.
-- Batch/cache/Markdown knowledge output.
+- Batch processing and Markdown knowledge output.
 
 ## Code Boundaries
 
@@ -56,6 +58,7 @@ Planned:
 - `models.py`: Pydantic v2 configs and structured records.
 - `media.py`: ffprobe/ffmpeg, subtitle discovery, subtitle parsing, audio extraction.
 - `asr.py`: local/cloud ASR and DashScope LLM adapters.
+- `cache.py`: ASR result cache (file-hash keyed JSON under `<output-dir>/.cache/`).
 - `text.py`: pure text and timestamp utilities.
 - `output.py`: render and write output artifacts.
 - `errors.py`: structured user-facing errors.
@@ -81,7 +84,7 @@ Before finishing code changes:
 uv run python -m compileall video_text_tool tests
 uv run pytest -q
 uv run video-text-tool --help
-uv run video-text-tool videoplaybask.mp4 --list-streams
+uv run video-text-tool res/videoplaybask.mp4 --list-streams
 ```
 
-For ASR validation, prefer a short clipped sample before full-file processing.
+For ASR validation, prefer `--max-seconds 10` on a real sample before full-file processing.

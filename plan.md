@@ -92,13 +92,9 @@
 - 支持 `--translate-to zh` 调用 DashScope LLM 做中文化整理。
 - 支持 `--list-streams` 查看输入媒体 stream 摘要。
 - 支持结构化错误提示，包含错误标题、细节和下一步建议。
-- 增加 `media/text/output` 的最小 pytest 覆盖。
-- 新增 `rag_pdfs/` PDF RAG 切分实验子项目：
-  - `inline_captions_chunks`：caption 内联进正文 chunk。
-  - `separate_caption_chunks`：caption 独立成 chunk，并带邻近上下文。
-  - `page_chunks`、`section_chunks`、`recursive_text_chunks` 作为对照策略。
-  - `pdf-rag-experiment` 输出对比 JSON、Markdown 报告和各策略 JSONL chunks。
-  - 提供 LangChain Document/FAISS 适配层，依赖放在可选 `pdf-rag` extra。
+- 支持 ASR 结果缓存：按文件哈希、后端、模型、截取参数键控，存放在 `<output-dir>/.cache/`，可用 `--no-cache`/`--force` 控制。
+- 支持 `--max-seconds` 只转写前 N 秒，便于烟测和控制云端成本。
+- 增加 `media/text/output/cache` 的最小 pytest 覆盖。
 
 ## 当前缺陷
 
@@ -109,7 +105,7 @@
 - ASR 对专有名词仍会误识别，例如 `Claude`、`token`、`API key`、`GPT`。
 - DashScope ASR 有时返回长段，当前按字符比例切时间戳，只是可用的近似方案。
 - 本地 FunASR 依赖还没有在当前 `.venv` 中安装和完整验证。
-- 还没有做批量处理、断点续跑和缓存。
+- 还没有做批量目录处理；缓存只覆盖 ASR 结果，`--translate-to` 的 LLM 结果不缓存。
 - 没有自动质量评估，例如字幕覆盖率、ASR 置信度、文本重复率。
 
 ## 优先级计划
@@ -162,7 +158,6 @@
 ### P5：批量处理和知识库输出
 
 - 批量处理目录。
-- 已处理文件缓存，避免重复 ASR。
 - 生成 Markdown 笔记：
   - 标题
   - 元数据
@@ -172,21 +167,12 @@
   - 可追溯片段链接
 - 支持输出到 Obsidian/Logseq 风格目录。
 
-### P6：PDF RAG chunk 实验
-
-- 用真实论文/手册样本验证 `inline_captions_chunks` 和 `separate_caption_chunks` 的检索差异。
-- 增加带标准答案或人工标注的 query set。
-- 对比 caption 命中率、答案上下文完整度、chunk 数量、平均长度和召回结果。
-- 接入实际 embeddings 后复测当前轻量 lexical retrieval 的结论。
-- 继续探索表格块、版面坐标、章节层级和参考文献过滤。
-
 ## 近期最值得做的改进
 
 1. 增加术语词典后处理，优先修正 `Claude/token/API key/GPT`。
 2. 把 `videoplaybask.mp4` 这类硬字幕视频纳入 OCR 实验。
 3. 为 ASR 后端增加更细的 smoke test 和错误处理测试。
 4. 生成 Markdown 笔记输出，适配知识库。
-5. 选一个真实 PDF 样本跑 `rag_pdfs`，比较 inline/separate caption chunks。
 
 ## 设计原则
 
