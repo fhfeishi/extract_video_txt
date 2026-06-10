@@ -152,6 +152,22 @@ uv run video-text-tool outputs/smoke_dashscope_10s/sample_10s.wav --backend dash
 
 已验证 DashScope ASR 和 `--translate-to zh` 调用链路可运行。短样例仍有 `Claude -> cloud` 这类术语误识别，后续需要术语词典或 LLM 纠错。
 
+## PDF RAG Experiments
+
+`rag_pdfs/` 是独立的 PDF RAG 切分实验子目录，重点比较 caption-aware chunks：
+
+```bash
+uv sync --extra pdf-rag --extra dev
+uv run pdf-rag-experiment paper.pdf --query "What does Figure 2 show?"
+```
+
+核心策略：
+
+- `inline_captions_chunks`：caption 内联进正文 chunk。
+- `separate_caption_chunks`：caption 独立成 chunk，并带邻近上下文。
+
+实验结果默认写入 `outputs/rag_pdfs/`，包含对比报告和各策略 JSONL chunks。
+
 ## Boundaries
 
 - 支持文字字幕：外挂 `.srt/.ass/.vtt`，内嵌 `srt/ass/mov_text/webvtt`。

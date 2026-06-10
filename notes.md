@@ -261,3 +261,38 @@ strata 连接 skill，而不是替代 skill。
 - 已经反复验证、能指导决策，沉淀到 `notes.md`，必要时再推广到 skill。
 
 Skill 的成熟不是一次写出来的，而是通过真实任务迭代出来的。好的路径是先用一个轻量 skill 指挥 2-3 个真实项目或功能，再观察 agent 是否仍然反复犯同类错误；如果会，就把触发描述、控制点、检查清单或脚本补进 skill。
+
+## PDF RAG chunk 实验原则
+
+PDF RAG 和视频文案提取共享同一个底层判断：不要一上来把材料压平成普通文本。先尽量保留来源结构，再做切分、索引和知识库输出。
+
+对论文、报告、技术手册这类 PDF，caption 是高价值结构。figure/table caption 经常浓缩了实验对象、变量、结论和图表编号，如果被普通递归切分吞进正文或切断，检索时容易出现两类问题：
+
+- 查图表问题时召回不到 caption。
+- 召回到 caption 但缺少正文解释上下文。
+
+当前 `rag_pdfs` 先固定两条主策略：
+
+```text
+inline_captions_chunks
+  = caption 按页面阅读顺序内联进正文 chunk
+  = 适合需要 caption + 正文解释一起召回的问答
+
+separate_caption_chunks
+  = 正文 chunk 排除 caption，caption 单独成 chunk，并携带前后邻近正文
+  = 适合图表标题本身就是高信号检索入口的问答
+```
+
+对照策略必须保留，否则很难判断 caption-aware 是否真的更好：
+
+- `page_chunks`：检查整页粗粒度是否已经足够。
+- `section_chunks`：检查标题层级是否比 caption 处理更重要。
+- `recursive_text_chunks`：作为最常见的纯文本 baseline。
+
+实验记录至少关注：
+
+- chunk 数量和平均长度。
+- caption coverage。
+- caption 独立 chunk 数量。
+- 检索 top-k 中是否含有可回答问题的上下文。
+- 是否需要真实 embedding 复测 lexical smoke test 的结论。

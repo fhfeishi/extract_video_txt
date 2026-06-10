@@ -575,3 +575,59 @@ video-text-extraction   = 字幕/ASR/OCR/术语/输出的视频文案方法
 ```text
 skills/video-text-extraction = 当前唯一 skill
 ```
+
+### PDF RAG caption-aware chunk 实验脚手架
+
+用户新建 PDF RAG pipeline 方向，希望参考 `strata.md`，并结合之前 LangChain PDF RAG 管线，围绕 `inline_captions_chunks` 和 `separate_caption_chunks` 展开实验，同时探索其他 chunk 对照方式。
+
+调整：
+
+- 新增 `rag_pdfs/` 子项目。
+- 新增核心数据结构：
+  - `PdfElement`：保留 page/order/kind/source/metadata。
+  - `PdfChunk`：保留 strategy/page_start/page_end/kind/metadata。
+- 新增 PDF 文本元素提取：
+  - `load_pdf_elements()` 使用可选 `pypdf`。
+  - `elements_from_text_pages()` 支持无 PDF 依赖的测试和实验样例。
+  - 基础识别 `caption`、`heading`、`body`。
+- 新增主策略：
+  - `inline_captions_chunks`：caption 内联进入正文流。
+  - `separate_caption_chunks`：caption 独立成 chunk，并携带前后正文 context。
+- 新增对照策略：
+  - `page_chunks`
+  - `section_chunks`
+  - `recursive_text_chunks`
+- 新增轻量实验比较：
+  - chunk 数量、平均长度、caption chunk 数、caption coverage。
+  - lexical retrieval smoke test，用于快速比较 query 的 top-k 召回。
+- 新增 LangChain 适配：
+  - `to_langchain_documents()`
+  - `build_faiss_retriever()`
+- 新增 CLI：
+
+```bash
+uv run pdf-rag-experiment paper.pdf --query "What does Figure 2 show?"
+```
+
+验证：
+
+```bash
+source ~/.zshrc
+uv lock
+uv run python -m compileall video_text_tool rag_pdfs tests
+uv run pytest -q
+uv run video-text-tool --help
+uv run pdf-rag-experiment --help
+uv run video-text-tool res/videoplaybask.mp4 --list-streams
+```
+
+结果：
+
+```text
+uv lock resolved 144 packages
+compileall passed
+pytest: 12 passed
+video-text-tool --help passed
+pdf-rag-experiment --help passed
+res/videoplaybask.mp4: video/audio streams only, no subtitle stream
+```
