@@ -25,6 +25,24 @@ Never print API keys. Report only whether a key is set.
 
 ## Canonical Pipeline
 
+Current lightweight path:
+
+```text
+audio/video file
+  -> ffmpeg extracts/normalizes audio to temporary 16 kHz mono wav
+  -> DashScope ASR
+  -> optional DashScope zh polish
+  -> split and render md/json/txt/srt
+```
+
+Recommended user command:
+
+```bash
+uv run python reaudio.py res/audioplayback.mp3 --output-dir outputs/reaudio
+```
+
+Legacy package path:
+
 ```text
 inspect media
   -> prefer external subtitles
@@ -54,6 +72,9 @@ Planned:
 
 ## Code Boundaries
 
+- `reaudio.py`: lightweight script entry, ffmpeg audio extraction from audio/video inputs, cache, splitting, Markdown/txt/srt/json rendering.
+- `reaudio_dashscope.py`: DashScope ASR and LLM adapter only.
+- `reaudio_notes.md`: development notes for the lightweight script direction and later tool-suite integration.
 - `cli.py`: argument parsing and pipeline orchestration.
 - `models.py`: Pydantic v2 configs and structured records.
 - `media.py`: ffprobe/ffmpeg, subtitle discovery, subtitle parsing, audio extraction.
@@ -81,8 +102,9 @@ When changing workflow assumptions, update `notes.md`. When changing priorities,
 Before finishing code changes:
 
 ```bash
-uv run python -m compileall video_text_tool tests
+uv run python -m compileall reaudio.py reaudio_dashscope.py video_text_tool tests
 uv run pytest -q
+uv run python reaudio.py --help
 uv run video-text-tool --help
 uv run video-text-tool res/videoplaybask.mp4 --list-streams
 ```

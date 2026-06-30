@@ -1,5 +1,25 @@
 # 视频文案提取笔记
 
+## 2026-06-30 脚本化收敛
+
+当前更贴近个人小工具合集的主入口是：
+
+```text
+reaudio.py
+reaudio_dashscope.py
+reaudio_notes.md
+```
+
+`reaudio.py` 负责把音频/视频输入变成 Markdown 文本和 JSON；视频输入会先被抽成临时音频，只处理声音，不处理画面。`reaudio_dashscope.py` 只放 DashScope ASR/LLM 适配。旧 `video_text_tool/` 包式结构继续保留，适合以后需要字幕优先、OCR、批量 pipeline 时参考。
+
+这个取舍的原则：
+
+- 小工具主入口要少文件、少概念、容易搬走。
+- 为了鲁棒性，`reaudio.py` 接受音频或视频输入；为了不膨胀，它对视频只抽音频流。
+- 云端 provider 代码仍要隔离，避免 API 细节污染主流程。
+- Markdown 是默认知识库输出；JSON 保留给后续脚本串联。
+- 缓存和 `--max-seconds` 不算臃肿，它们直接降低重复调用和云端成本。
+
 ## 目标
 
 把视频尽可能可靠地转换成文字版材料，用于笔记、摘要、检索、提示词构建和知识库沉淀。

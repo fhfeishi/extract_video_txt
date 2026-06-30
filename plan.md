@@ -74,6 +74,9 @@
 
 ## 当前已实现
 
+- 轻量脚本入口：`uv run python reaudio.py audio.mp3` 或 `uv run python reaudio.py video.mp4`，内部统一抽取音频，默认生成 Markdown 和 JSON。
+- DashScope 适配脚本：`reaudio_dashscope.py`，把云端 ASR/LLM provider 代码和主脚本隔离。
+- `reaudio.py` 支持 `--max-seconds`、ASR 缓存、`--translate-to zh`、`md/txt/srt/json` 输出。
 - CLI 入口：`uv run video-text-tool`，兼容 `python -m video_text_tool`
 - 使用 Pydantic v2 定义运行配置、本地 ASR 配置、DashScope 配置、输出配置和文本片段结构。
 - 使用 `ffprobe` 检测容器内字幕流。
@@ -110,20 +113,26 @@
 
 ## 优先级计划
 
-### P0：稳定当前工具
+### P0：稳定轻量脚本入口
+
+- 以 `reaudio.py` 作为当前主入口，保持音频/视频输入到 Markdown 的路径简单可靠；视频输入只抽音频，不扩展画面/OCR处理。
+- 保持 `reaudio_dashscope.py` 内聚云端 provider 逻辑，避免主脚本膨胀。
+- 保留 `video_text_tool/` 作为字幕优先和包式实现参考，暂不主动删除。
+
+### P1：稳定旧包式工具
 
 - 保持字幕优先、ASR 兜底的主流程可用。
 - 继续完善错误信息，尤其是无音频流、ffmpeg 失败、云端 API 失败时的提示。
 - 保持 `txt/srt/json` 输出格式稳定。
 
-### P1：完善字幕优先策略
+### P2：完善字幕优先策略
 
 - 在 `--list-streams` 中更详细标注字幕流是否文字型/图片型。
 - 支持更多外挂字幕命名规则和语言别名。
 - 强化 `.ass/.vtt` 解析质量，减少样式标签残留。
 - 支持图片字幕流检测后给出 OCR 提示。
 
-### P2：术语纠错和文本清洗
+### P3：术语纠错和文本清洗
 
 - 增加术语词典，例如：
   - `cloud -> Claude`
@@ -138,14 +147,14 @@
   - 中文笔记化
   - 摘要和章节标题
 
-### P3：硬字幕 OCR
+### P4：硬字幕 OCR
 
 - 自动抽帧判断底部是否存在字幕。
 - 对字幕区域裁剪，减少 OCR 干扰。
 - 尝试 PaddleOCR 或其他本地 OCR。
 - 将 OCR 文本和 ASR 文本按时间对齐，用 OCR 修正专有名词。
 
-### P4：下载源增强
+### P5：下载源增强
 
 - 支持接入更可靠的视频下载工具，例如 `yt-dlp`。
 - 下载视频时同时尝试下载字幕：
@@ -155,7 +164,7 @@
   - 英文备选
 - 记录来源 URL、标题、作者、发布时间等元数据。
 
-### P5：批量处理和知识库输出
+### P6：批量处理和知识库输出
 
 - 批量处理目录。
 - 生成 Markdown 笔记：
@@ -169,10 +178,10 @@
 
 ## 近期最值得做的改进
 
-1. 增加术语词典后处理，优先修正 `Claude/token/API key/GPT`。
-2. 把 `videoplaybask.mp4` 这类硬字幕视频纳入 OCR 实验。
-3. 为 ASR 后端增加更细的 smoke test 和错误处理测试。
-4. 生成 Markdown 笔记输出，适配知识库。
+1. 用 `reaudio.py --max-seconds 10` 做 DashScope 烟测，确认脚本化入口稳定。
+2. 增加术语词典后处理，优先修正 `Claude/token/API key/GPT`。
+3. 增加批量目录处理，让小工具合集更容易复用。
+4. 把 `videoplaybask.mp4` 这类硬字幕视频纳入 OCR 实验。
 
 ## 设计原则
 

@@ -1,5 +1,29 @@
 # 开发日志
 
+## 2026-06-30
+
+### 脚本化收敛
+
+用户希望把仓库从包式工具收敛为后续可汇总的小工具形态，核心需求变成：
+
+```text
+audio-file -> markdown text
+```
+
+新增：
+
+```text
+reaudio.py
+reaudio_dashscope.py
+reaudio_notes.md
+```
+
+取舍：
+
+- `reaudio.py` 作为当前推荐入口，接受音频或视频输入，负责用 `ffmpeg` 抽取/规范化音频、ASR 缓存、分段、Markdown/txt/srt/json 输出。
+- `reaudio_dashscope.py` 专注 DashScope ASR 和 DashScope LLM 中文整理。
+- `video_text_tool/` 暂不删除，继续作为字幕优先 pipeline 和测试参考。
+
 ## 2026-06-07
 
 ### 初始目标
