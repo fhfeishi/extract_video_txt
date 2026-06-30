@@ -38,7 +38,7 @@ audio/video file
 Recommended user command:
 
 ```bash
-uv run python reaudio.py res/audioplayback.mp3 --output-dir outputs/reaudio
+uv run python reaudio_dashscope.py res/audioplayback.mp3 --output-dir outputs/reaudio
 ```
 
 Legacy package path:
@@ -72,8 +72,7 @@ Planned:
 
 ## Code Boundaries
 
-- `reaudio.py`: lightweight script entry, ffmpeg audio extraction from audio/video inputs, cache, splitting, Markdown/txt/srt/json rendering.
-- `reaudio_dashscope.py`: DashScope ASR and LLM adapter only.
+- `reaudio_dashscope.py`: single-file lightweight entry, ffmpeg audio extraction from audio/video inputs, DashScope ASR, default LLM polishing, cache, splitting, Markdown/txt/srt/json rendering.
 - `reaudio_notes.md`: development notes for the lightweight script direction and later tool-suite integration.
 - `cli.py`: argument parsing and pipeline orchestration.
 - `models.py`: Pydantic v2 configs and structured records.
@@ -102,9 +101,9 @@ When changing workflow assumptions, update `notes.md`. When changing priorities,
 Before finishing code changes:
 
 ```bash
-uv run python -m compileall reaudio.py reaudio_dashscope.py video_text_tool tests
+uv run python -m compileall reaudio_dashscope.py video_text_tool tests
 uv run pytest -q
-uv run python reaudio.py --help
+uv run python reaudio_dashscope.py --help
 uv run video-text-tool --help
 uv run video-text-tool res/videoplaybask.mp4 --list-streams
 ```

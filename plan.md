@@ -74,9 +74,8 @@
 
 ## 当前已实现
 
-- 轻量脚本入口：`uv run python reaudio.py audio.mp3` 或 `uv run python reaudio.py video.mp4`，内部统一抽取音频，默认生成 Markdown 和 JSON。
-- DashScope 适配脚本：`reaudio_dashscope.py`，把云端 ASR/LLM provider 代码和主脚本隔离。
-- `reaudio.py` 支持 `--max-seconds`、ASR 缓存、`--translate-to zh`、`md/txt/srt/json` 输出。
+- 单文件轻量脚本入口：`uv run python reaudio_dashscope.py audio.mp3` 或 `uv run python reaudio_dashscope.py video.mp4`，内部统一抽取音频，默认生成润色后的 Markdown 和 JSON。
+- `reaudio_dashscope.py` 支持 `--max-seconds`、ASR 缓存、默认 LLM 润色、`--no-polish`、`md/txt/srt/json` 输出。
 - CLI 入口：`uv run video-text-tool`，兼容 `python -m video_text_tool`
 - 使用 Pydantic v2 定义运行配置、本地 ASR 配置、DashScope 配置、输出配置和文本片段结构。
 - 使用 `ffprobe` 检测容器内字幕流。
@@ -115,8 +114,8 @@
 
 ### P0：稳定轻量脚本入口
 
-- 以 `reaudio.py` 作为当前主入口，保持音频/视频输入到 Markdown 的路径简单可靠；视频输入只抽音频，不扩展画面/OCR处理。
-- 保持 `reaudio_dashscope.py` 内聚云端 provider 逻辑，避免主脚本膨胀。
+- 以 `reaudio_dashscope.py` 作为当前主入口，保持音频/视频输入到润色 Markdown 的路径简单可靠；视频输入只抽音频，不扩展画面/OCR处理。
+- 保持单文件形态，便于后续迁移到个人小工具合集。
 - 保留 `video_text_tool/` 作为字幕优先和包式实现参考，暂不主动删除。
 
 ### P1：稳定旧包式工具
@@ -178,7 +177,7 @@
 
 ## 近期最值得做的改进
 
-1. 用 `reaudio.py --max-seconds 10` 做 DashScope 烟测，确认脚本化入口稳定。
+1. 用 `reaudio_dashscope.py --max-seconds 10` 做 DashScope 烟测，确认脚本化入口稳定。
 2. 增加术语词典后处理，优先修正 `Claude/token/API key/GPT`。
 3. 增加批量目录处理，让小工具合集更容易复用。
 4. 把 `videoplaybask.mp4` 这类硬字幕视频纳入 OCR 实验。

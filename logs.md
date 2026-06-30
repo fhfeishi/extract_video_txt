@@ -13,15 +13,14 @@ audio-file -> markdown text
 新增：
 
 ```text
-reaudio.py
 reaudio_dashscope.py
 reaudio_notes.md
 ```
 
 取舍：
 
-- `reaudio.py` 作为当前推荐入口，接受音频或视频输入，负责用 `ffmpeg` 抽取/规范化音频、ASR 缓存、分段、Markdown/txt/srt/json 输出。
-- `reaudio_dashscope.py` 专注 DashScope ASR 和 DashScope LLM 中文整理。
+- `reaudio_dashscope.py` 作为当前推荐入口，接受音频或视频输入，负责用 `ffmpeg` 抽取/规范化音频、DashScope ASR、默认 LLM 润色、ASR 缓存、分段、Markdown/txt/srt/json 输出。
+- 删除拆分出来的 `reaudio.py`，避免一个固定 DashScope 工具被过度分层。
 - `video_text_tool/` 暂不删除，继续作为字幕优先 pipeline 和测试参考。
 
 ## 2026-06-07

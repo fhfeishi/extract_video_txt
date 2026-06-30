@@ -1,6 +1,6 @@
 # extract_video_txt
 
-本地优先的视频/音频文案提取工具。当前推荐入口是轻量脚本 `reaudio.py`：输入一个音频或视频文件，脚本内部自动抽成临时音频，再输出 Markdown 文本，适合后续汇总到个人小工具合集。
+本地优先的视频/音频文案提取工具。当前推荐入口是单文件脚本 `reaudio_dashscope.py`：输入一个音频或视频文件，脚本内部自动抽成临时音频，借助 DashScope ASR 和 LLM 输出润色后的 Markdown 文本，适合后续汇总到个人小工具合集。
 
 旧包式 CLI `video-text-tool` 仍保留，作为字幕优先 pipeline、测试和后续重构参考。
 
@@ -10,7 +10,7 @@
 cd ~/wslcodespace/extract_video_txt
 uv sync --extra dashscope --extra dev
 source ~/.zshrc
-uv run python reaudio.py res/audioplayback.mp3 --output-dir outputs/reaudio
+uv run python reaudio_dashscope.py res/audioplayback.mp3 --output-dir outputs/reaudio
 ```
 
 默认输出：
@@ -23,25 +23,25 @@ outputs/reaudio/audioplayback.json
 只转写前 10 秒，用于烟测和控制云端成本：
 
 ```bash
-uv run python reaudio.py res/audioplayback.mp3 --max-seconds 10 --output-dir outputs/reaudio_smoke
+uv run python reaudio_dashscope.py res/audioplayback.mp3 --max-seconds 10 --output-dir outputs/reaudio_smoke
 ```
 
-转写后整理为中文 Markdown：
+默认会转写并润色为中文 Markdown；如果只要 ASR 原文，可跳过润色：
 
 ```bash
-uv run python reaudio.py audio.mp3 --translate-to zh --formats md,json --output-dir outputs/reaudio
+uv run python reaudio_dashscope.py audio.mp3 --no-polish --formats md,json --output-dir outputs/reaudio
 ```
 
 需要字幕文件时：
 
 ```bash
-uv run python reaudio.py audio.mp3 --formats md,srt,json --output-dir outputs/reaudio
+uv run python reaudio_dashscope.py audio.mp3 --formats md,srt,json --output-dir outputs/reaudio
 ```
 
-也可以直接传视频文件；`reaudio.py` 会用 `ffmpeg` 提取音频流后再 ASR，不会把视频画面、字幕探测、OCR 纳入这个轻量脚本：
+也可以直接传视频文件；`reaudio_dashscope.py` 会用 `ffmpeg` 提取音频流后再 ASR，不会把视频画面、字幕探测、OCR 纳入这个轻量脚本：
 
 ```bash
-uv run python reaudio.py video.mp4 --output-dir outputs/reaudio
+uv run python reaudio_dashscope.py video.mp4 --output-dir outputs/reaudio
 ```
 
 更多开发取舍见 `reaudio_notes.md`。
